@@ -560,7 +560,7 @@ XMLNodePointer_t TGDMLParse::MatrixProcess(TXMLEngine* gdml, XMLNodePointer_t no
    for (size_t i=0; i<valueList.size(); ++i)
       matrix->Set(i/coldim, i%coldim, valueList[i]);
 
-   gGeoManager->AddGDMLMatrix(matrix);
+   fGeometry->AddGDMLMatrix(matrix);
    fmatrices[name.Data()] = matrix;
 
    return node;
@@ -623,7 +623,7 @@ XMLNodePointer_t TGDMLParse::OpticalSurfaceProcess(TXMLEngine* gdml, XMLNodePoin
       } // loop on child attributes
       child = gdml->GetNext(child);
    } // loop on children
-   gGeoManager->AddOpticalSurface(surf);
+   fGeometry->AddOpticalSurface(surf);
    return child;
 }
 
@@ -1002,9 +1002,8 @@ XMLNodePointer_t TGDMLParse::IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    Int_t n2 = (Int_t)Value(n);
    Double_t atom2 = Value(atom);
 
-   TGeoManager*  mgr = gGeoManager;
    TString       iso_name = NameShort(name);
-   TGeoElementTable* tab  = mgr->GetElementTable();
+   TGeoElementTable* tab  = fGeometry->GetElementTable();
    TGeoIsotope*      iso  = tab->FindIsotope(iso_name);
    if ( !iso )  {
       iso = new TGeoIsotope(iso_name, z2 , n2, atom2);
@@ -1032,8 +1031,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
   TString atom = "0";
   TString tempattr;
   Int_t   ncompo = 0;
-  TGeoManager*      mgr  = gGeoManager;
-  TGeoElementTable* tab  = mgr->GetElementTable();
+  TGeoElementTable* tab  = fGeometry->GetElementTable();
   typedef FracMap::iterator fractions;
   FracMap fracmap;
 
@@ -1245,12 +1243,11 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 //  typedef FracMap::iterator i;
    FracMap fracmap;
 
-   TGeoManager* mgr = gGeoManager;
-   TGeoElementTable* tab_ele = mgr->GetElementTable();
+   TGeoElementTable* tab_ele = fGeometry->GetElementTable();
    TList properties;
    properties.SetOwner();
    // We have to assume the media are monotonic increasing starting with 1
-   static int medid = mgr->GetListOfMedia()->GetSize()+1;
+   static int medid = fGeometry->GetListOfMedia()->GetSize()+1;
    XMLNodePointer_t child = gdml->GetChild(node);
    TString tempattr = "";
    Int_t ncompo = 0, mixflag = 2;
@@ -1332,7 +1329,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          valZ = 0;
       }
       TString mat_name = NameShort(name);
-      mat = mgr->GetMaterial(mat_name);
+      mat = fGeometry->GetMaterial(mat_name);
       if ( !mat )  {
          mat = new TGeoMaterial(mat_name, a, valZ, d);
       }
@@ -1449,7 +1446,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       //mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);
       mixflag = 1;
       TString mat_name = NameShort(name);
-      mat = mgr->GetMaterial(mat_name);
+      mat = fGeometry->GetMaterial(mat_name);
       if ( !mat )  {
          mix = new TGeoMixture(mat_name, ncompo, density);
       }
@@ -1474,7 +1471,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          matname = f->first;
          matname = NameShort(matname);
 
-         TGeoMaterial *mattmp = (TGeoMaterial*)gGeoManager->GetListOfMaterials()->FindObject(matname);
+         TGeoMaterial *mattmp = (TGeoMaterial*)fGeometry->GetListOfMaterials()->FindObject(matname);
 
          if (mattmp || (felemap.find(f->first) != felemap.end())) {
             if (composite) {
@@ -1499,7 +1496,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    medid = medid + 1;
 
-   TGeoMedium* med = mgr->GetMedium(NameShort(name));
+   TGeoMedium* med = fGeometry->GetMedium(NameShort(name));
    if ( !med )   {
       if (mixflag == 1) {
          fmixmap[name.Data()] = mix;
@@ -1553,13 +1550,13 @@ XMLNodePointer_t TGDMLParse::SkinSurfaceProcess(TXMLEngine* gdml, XMLNodePointer
       } // loop on child attributes
       child = gdml->GetNext(child);
    } // loop on children
-   TGeoOpticalSurface *surf = gGeoManager->GetOpticalSurface(surfname);
+   TGeoOpticalSurface *surf = fGeometry->GetOpticalSurface(surfname);
    if (!surf) 
       Fatal("SkinSurfaceProcess", "Skin surface %s: referenced optical surface %s not defined",
             name.Data(), surfname.Data());
    TGeoVolume *vol = fvolmap[volname.Data()];
    TGeoSkinSurface *skin = new TGeoSkinSurface(name, surfname, surf, vol);
-   gGeoManager->AddSkinSurface(skin);
+   fGeometry->AddSkinSurface(skin);
    return child;
 }
 
@@ -1602,7 +1599,7 @@ XMLNodePointer_t TGDMLParse::BorderSurfaceProcess(TXMLEngine* gdml, XMLNodePoint
    } // loop on children
    if (inode != 2)
       Fatal("BorderSurfaceProcess", "Border surface %s not referencing two nodes", name.Data());
-   TGeoOpticalSurface *surf = gGeoManager->GetOpticalSurface(surfname);
+   TGeoOpticalSurface *surf = fGeometry->GetOpticalSurface(surfname);
    if (!surf)
       Fatal("BorderSurfaceProcess", "Border surface %s: referenced optical surface %s not defined",
             name.Data(), surfname.Data());
@@ -1613,7 +1610,7 @@ XMLNodePointer_t TGDMLParse::BorderSurfaceProcess(TXMLEngine* gdml, XMLNodePoint
             name.Data(), nodename[0].Data(), nodename[1].Data());
 
    TGeoBorderSurface *border = new TGeoBorderSurface(name, surfname, surf, node1, node2);
-   gGeoManager->AddBorderSurface(border);
+   fGeometry->AddBorderSurface(border);
    return child;
 }
 
@@ -2310,7 +2307,7 @@ XMLNodePointer_t TGDMLParse::UsrProcess(TXMLEngine* gdml, XMLNodePointer_t node)
         subchild = gdml->GetNext(subchild);
       }
       if (region) {
-        gGeoManager->AddRegion(region);
+        fGeometry->AddRegion(region);
         // region->Print();
       }
       child = gdml->GetNext(child);
@@ -2434,7 +2431,7 @@ XMLNodePointer_t TGDMLParse::AssProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 XMLNodePointer_t TGDMLParse::TopProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 {
    const char* name = gdml->GetAttr(node, "name");
-   gGeoManager->SetName(name);
+   fGeometry->SetName(name);
    XMLNodePointer_t child = gdml->GetChild(node);
    TString reftemp = "";
 

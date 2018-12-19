@@ -42,9 +42,9 @@
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
-// TGDMLWrite - Class for exporting geometries From ROOT's gGeoManager    //
-//    (instance of TGeoManager class) To GDML file. More about GDML       //
-//    see http://gdml.web.cern.ch.                                        //
+// TGDMLWrite - Class for exporting geometries From ROOT's TGeoManager    //
+//    instance to GDML file.                                              //
+//    More about GDML see: http://gdml.web.cern.ch.                       //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@ class TGeoBorderSurface;
 
 class TGDMLWrite : public TObject {
 public:
-   TGDMLWrite();
+   TGDMLWrite(TGeoManager *geom = nullptr);
    virtual ~TGDMLWrite();
 
    static void StartGDMLWriting(TGeoManager * geomanager, const char* filename, TString option) {
@@ -65,27 +65,29 @@ public:
       //        with incremental suffix, if "f" then suffix is pointer
       //        if "n" then there is no suffix, but uniqness of names
       //        is not secured.
-      TGDMLWrite *writer = new TGDMLWrite;
+      TGDMLWrite *writer = new TGDMLWrite(geomanager);
       writer->SetFltPrecision(TGeoManager::GetExportPrecision());
-      writer->WriteGDMLfile(geomanager, filename, option);
+      writer->WriteGDMLfile(filename, option);
       delete writer;
    }
    //wrapper of all main methods for extraction
-   void WriteGDMLfile(TGeoManager * geomanager, const char* filename = "test.gdml", TString option = "");
+   void WriteGDMLfile(const char* filename = "test.gdml", TString option = "");
    // Wrapper to only selectively write one branch of the volume hierarchy to file
-   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename = "test.gdml", TString option = "");
+   void WriteGDMLfile(TGeoVolume* volume, const char* filename = "test.gdml", TString option = "");
 
    enum ENamingType {
       kelegantButSlow = 0,
       kwithoutSufixNotUniq = 1,
       kfastButUglySufix = 2
    };
+   void SetGeometry(TGeoManager *geom) { fGeometry = geom; }
    void SetNamingSpeed(ENamingType naming);
    void SetG4Compatibility(Bool_t G4Compatible) {
       fgG4Compatibility = G4Compatible;
    };
 
 private:
+   TGeoManager *fGeometry = nullptr;     //! geometry to be exported
    struct Xyz {
       Double_t x;
       Double_t y;
@@ -113,7 +115,6 @@ private:
    NameLst *fNameList; //list of names (pointer mapped)
 
    //Data members
-   static TGDMLWrite *fgGDMLWrite;                         //pointer to gdml writer
    Int_t  fgNamingSpeed;                                   //input option for volume and solid naming
    Bool_t fgG4Compatibility;                               //input option for Geant4 compatibility
    XMLDocPointer_t  fGdmlFile;                             //pointer storing xml file
@@ -134,8 +135,8 @@ private:
    static const UInt_t fgkProcBitVol = BIT(19);    //19th bit is set when volume is processed
    static const UInt_t fgkMaxNameErr = 5;          //maximum number of errors for naming
 
-   //I. Methods processing the gGeoManager geometry object structure
-   //1. Main methods to extract everything from ROOT gGeoManager
+   //I. Methods processing the TGeoManager geometry object structure
+   //1. Main methods to extract everything from ROOT TGeoManager
    XMLNodePointer_t ExtractMaterials(TList* materialsLst); //result <materials>...
    TString          ExtractSolid(TGeoShape* volShape);     //adds <shape> to <solids>
    void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...  + corresp. shape
@@ -145,7 +146,7 @@ private:
    void             ExtractBorderSurfaces(TObjArray *surfaces);  //adds <bordersurface> to <structure>
 
    // Combined implementation to extract GDML information from the geometry tree
-   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, TList* materialsLst, const char* filename, TString option);
+   void WriteGDMLfile(TGeoVolume* volume, TList* materialsLst, const char* filename, TString option);
 
    //1.1 Materials sub methods - creating Nodes
    XMLNodePointer_t CreateAtomN(Double_t atom, const char * unit = "g/mole");
@@ -215,7 +216,7 @@ private:
    Bool_t CanProcess(TObject *pointer);
    TString GetPattAxis(Int_t divAxis, const char * pattName, TString& unit);
    Bool_t IsNullParam(Double_t parValue, TString parName, TString objName);
-   void UnsetTemporaryBits(TGeoManager * geoMng);
+   void UnsetTemporaryBits();
    UInt_t GetFltPrecision() const { return fFltPrecision; }
    void SetFltPrecision(UInt_t prec) { fFltPrecision = prec; }
 

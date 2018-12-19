@@ -166,8 +166,6 @@ See that function for details.
 
 ClassImp(TGDMLWrite);
 
-TGDMLWrite *TGDMLWrite::fgGDMLWrite = 0;
-
 namespace {
   struct MaterialExtractor  {
     std::set<TGeoMaterial*> materials;
@@ -182,8 +180,9 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TGDMLWrite::TGDMLWrite()
+TGDMLWrite::TGDMLWrite(TGeoManager *geom)
    : TObject(),
+     fGeometry(geom),
      fIsotopeList(0),
      fElementList(0),
      fAccPatt(0),
@@ -204,8 +203,6 @@ TGDMLWrite::TGDMLWrite()
      fSolCnt(0),
      fFltPrecision(17)   // %.17g
 {
-   if (fgGDMLWrite) delete fgGDMLWrite;
-   fgGDMLWrite = this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,8 +215,6 @@ TGDMLWrite::~TGDMLWrite()
    delete fAccPatt;
    delete fRejShape;
    delete fNameList;
-
-   fgGDMLWrite = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,21 +227,21 @@ void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 
 ////////////////////////////////////////////////////////////////////////////////
 //wrapper of all main methods for extraction
-void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
+void TGDMLWrite::WriteGDMLfile(const char* filename, TString option)
 {
-  TList* materials = geomanager->GetListOfMaterials();
-  TGeoVolume* volume = geomanager->GetTopVolume();
+  TList* materials = fGeometry->GetListOfMaterials();
+  TGeoVolume* volume = fGeometry->GetTopVolume();
   if ( !volume )   {
     Info("WriteGDMLfile", "Top volume does not exist!");
     return;
   }
   fTopVolumeName = "";
-  WriteGDMLfile(geomanager, volume, materials, filename, option);
+  WriteGDMLfile(volume, materials, filename, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Wrapper to only selectively write one branch of the volume hierarchy to file
-void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename, TString option)
+void TGDMLWrite::WriteGDMLfile(TGeoVolume* volume, const char* filename, TString option)
 {
   TList materials;
   MaterialExtractor extract;
@@ -258,17 +253,16 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, con
   for(TGeoMaterial* m : extract.materials)
     materials.Add(m);
   fTopVolumeName = volume->GetName();
-  WriteGDMLfile(geomanager, volume, &materials, filename, option);
+  WriteGDMLfile(volume, &materials, filename, option);
   materials.Clear("nodelete");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper of all exporting methods
-/// Creates blank GDML file and fills it with gGeoManager structure converted
+/// Creates blank GDML file and fills it with TGeoManager structure converted
 /// to GDML structure of xml nodes
 
-void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
-                               TGeoVolume* volume,
+void TGDMLWrite::WriteGDMLfile(TGeoVolume* volume,
                                TList* materialsLst,
                                const char* filename,
                                TString option)
@@ -353,7 +347,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    //calling main extraction functions (with measuring time)
    time_t startT, endT;
    startT = time(NULL);
-   ExtractMatrices(geomanager->GetListOfGDMLMatrices());
+   ExtractMatrices(fGeometry->GetListOfGDMLMatrices());
    fMaterialsNode = ExtractMaterials(materialsLst);
 
    Info("WriteGDMLfile", "Extracting volumes");
@@ -361,9 +355,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    Info("WriteGDMLfile", "%i solids added", fSolCnt);
    Info("WriteGDMLfile", "%i volumes added", fVolCnt);
    Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
-   ExtractOpticalSurfaces(geomanager->GetListOfOpticalSurfaces());
-   ExtractSkinSurfaces(geomanager->GetListOfSkinSurfaces());
-   ExtractBorderSurfaces(geomanager->GetListOfBorderSurfaces());
+   ExtractOpticalSurfaces(fGeometry->GetListOfOpticalSurfaces());
+   ExtractSkinSurfaces(fGeometry->GetListOfSkinSurfaces());
+   ExtractBorderSurfaces(fGeometry->GetListOfBorderSurfaces());
    endT = time(NULL);
    //<gdml>
    fGdmlE->AddChild(rootNode, fDefineNode);                 //  <define>...</define>
@@ -383,7 +377,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
    //cleaning
    fGdmlE->FreeDoc(fGdmlFile);
    //unset processing bits:
-   UnsetTemporaryBits(geomanager);
+   UnsetTemporaryBits();
    delete fGdmlE;
 }
 
@@ -2259,13 +2253,12 @@ Bool_t TGDMLWrite::IsNullParam(Double_t parValue, TString parName, TString objNa
 /// Unsetting bits that were changed in gGeoManager during export so that export
 /// can be run more times with the same instance of gGeoManager.
 
-void TGDMLWrite::UnsetTemporaryBits(TGeoManager * geoMng)
+void TGDMLWrite::UnsetTemporaryBits()
 {
-   TIter next(geoMng->GetListOfVolumes());
+   TIter next(fGeometry->GetListOfVolumes());
    TGeoVolume *vol;
    while ((vol = (TGeoVolume *)next())) {
       ((TObject *)vol->GetShape())->SetBit(fgkProcBit, kFALSE);
       vol->SetAttBit(fgkProcBitVol, kFALSE);
    }
-
 }

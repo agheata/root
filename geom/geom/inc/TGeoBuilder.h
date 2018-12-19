@@ -26,19 +26,16 @@ class TGeoManager;
 class TGeoBuilder : public TObject
 {
 protected:
-   static TGeoBuilder    *fgInstance;            //! static pointer to singleton
 
-   TGeoBuilder();
    TGeoBuilder(const TGeoBuilder&);
    TGeoBuilder& operator=(const TGeoBuilder&);
 
 private :
-   TGeoManager           *fGeometry;             //! current geometry
-
-   void                   SetGeometry(TGeoManager *geom) {fGeometry = geom;}
+   TGeoManager           *fGeometry = nullptr;   //! geometry manager
 
 public :
-   virtual ~TGeoBuilder();
+   TGeoBuilder(TGeoManager *geom = nullptr) : fGeometry(geom) {}
+   virtual ~TGeoBuilder() {}
 
    static TGeoBuilder    *Instance(TGeoManager *geom);
 
@@ -133,4 +130,3 @@ public :
 };
 
 #endif
-

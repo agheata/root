@@ -38,6 +38,7 @@ class TGDMLMatrix;
 class TGeoOpticalSurface;
 class TGeoSkinSurface;
 class TGeoBorderSurface;
+class TGeoBuilder;
 
 class TGeoManager : public TNamed
 {
@@ -140,6 +141,7 @@ private :
    Int_t                 fRaytraceMode;     //! Raytrace mode: 0=normal, 1=pass through, 2=transparent
    Bool_t                fUsePWNav;         // Activate usage of parallel world in navigation
    TGeoParallelWorld    *fParallelWorld;    // Parallel world
+   TGeoBuilder          *fBuilder = nullptr; //! Builder for this geometry
 //--- private methods
    Bool_t                IsLoopingVolumes() const     {return fLoopVolumes;}
    void                  Init();

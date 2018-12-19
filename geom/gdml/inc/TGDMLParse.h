@@ -98,31 +98,28 @@ public:
 class TGDMLParse : public TObject {
 public:
 
-   TString fWorldName;
-   TGeoVolume* fWorld; //top volume of geometry
-   int fVolID;   //volume ID, incremented as assigned.
-   int fFILENO; //Holds which level of file the parser is at
-   TXMLEngine* fFileEngine[20]; //array of dom object pointers
-   const char* fStartFile; //name of originating file
-   const char* fCurrentFile; //current file name being parsed
+   TGeoManager *fGeometry   = nullptr;       // Geometry manager created
+   TString fWorldName;                       // Name of the world volume
+   TGeoVolume* fWorld       = nullptr;       // Top volume of geometry
+   int fVolID               = 0;             // Volume ID, incremented as assigned.
+   int fFILENO              = 0;             // Holds which level of file the parser is at
+   TXMLEngine* fFileEngine[20];              // Array of dom object pointers
+   const char* fStartFile   = nullptr;       // Name of originating file
+   const char* fCurrentFile = nullptr;       // Current file name being parsed
+
    std::string fDefault_lunit = "cm";
    std::string fDefault_aunit = "deg";
 
-   TGDMLParse() { //constructor
-      fWorldName = "";
-      fWorld = 0;
-      fVolID = 0;
-      fFILENO = 0;
+   TGDMLParse(TGeoManager *geom = nullptr) : fGeometry(geom)
+   {
+      //constructor
       for (Int_t i=0; i<20; i++) fFileEngine[i] = 0;
-      fStartFile = 0;
-      fCurrentFile = 0;
    }
 
-   virtual ~TGDMLParse() { //destructor
-   }
+   virtual ~TGDMLParse() {}
 
-   static TGeoVolume* StartGDML(const char* filename) {
-      TGDMLParse* parser = new TGDMLParse;
+   static TGeoVolume* StartGDML(const char* filename, TGeoManager *geom) {
+      TGDMLParse* parser = new TGDMLParse(geom);
       TGeoVolume* world = parser->GDMLReadFile(filename);
       return world;
    }

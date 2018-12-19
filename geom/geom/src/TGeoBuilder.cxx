@@ -13,12 +13,8 @@
 \ingroup Geometry_classes
 
 Utility class for creating geometry objects.These will be associated
-with the current selected geometry manager object:
+with the geometry manager object:
 
-`TGeoBuilder::Instance()->SetGeometry(gGeoManager);`
-
-The geometry builder is a singleton that may be used to build one or more
-geometries.
 */
 
 #include "TList.h"
@@ -48,57 +44,6 @@ geometries.
 #include "TGeoBuilder.h"
 
 ClassImp(TGeoBuilder);
-
-TGeoBuilder *TGeoBuilder::fgInstance = NULL;
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor.
-
-TGeoBuilder::TGeoBuilder()
-            :fGeometry(nullptr)
-{
-   fgInstance = this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TGeoBuilder::TGeoBuilder(const TGeoBuilder& other)
-            :TObject(other), fGeometry(nullptr)
-{
-   Error("copy constructor","copying not allowed for TGeoBuilder");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TGeoBuilder::~TGeoBuilder()
-{
-   fgInstance = nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment.
-
-TGeoBuilder &TGeoBuilder::operator=(const TGeoBuilder&)
-{
-   Error("Assignment","assignment not allowed for TGeoBuilder");
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to singleton.
-
-TGeoBuilder *TGeoBuilder::Instance(TGeoManager *geom)
-{
-   if (!geom) {
-      printf("ERROR: Cannot create geometry builder with NULL geometry\n");
-      return NULL;
-   }
-   if (!fgInstance) fgInstance = new TGeoBuilder();
-   fgInstance->SetGeometry(geom);
-   return fgInstance;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a material to the list. Returns index of the material in list.
@@ -1050,4 +995,3 @@ TGeoVolume *TGeoBuilder::Volume(const char *name, const char *shape, Int_t nmed,
    }
    return volume;
 }
-

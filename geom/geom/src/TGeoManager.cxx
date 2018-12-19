@@ -383,6 +383,7 @@ TGeoManager::TGeoManager()
       fMaxThreads = 0;
       fUsePWNav = kFALSE;
       fParallelWorld = 0;
+      fBuilder = new TGeoBuilder(this);
       ClearThreadsMap();
    } else {
       Init();
@@ -490,6 +491,7 @@ void TGeoManager::Init()
    fMaxThreads = 0;
    fUsePWNav = kFALSE;
    fParallelWorld = 0;
+   fBuilder = new TGeoBuilder(this);
    ClearThreadsMap();
 }
 
@@ -569,7 +571,8 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fMultiThread(kFALSE),
   fRaytraceMode(0),
   fUsePWNav(kFALSE),
-  fParallelWorld(0)
+  fParallelWorld(0),
+  fBuilder(new TGeoBuilder(this))
 {
    for(Int_t i=0; i<1024; i++)
       fPdgId[i]=gm.fPdgId[i];
@@ -683,7 +686,7 @@ TGeoManager::~TGeoManager()
 //   while ((browser=(TBrowser*)next())) browser->RecursiveRemove(this);
    ClearThreadsMap();
    ClearThreadData();
-   delete TGeoBuilder::Instance(this);
+   delete fBuilder;
    if (fBits)  delete [] fBits;
    SafeDelete(fNodes);
    SafeDelete(fTopNode);
@@ -726,7 +729,7 @@ TGeoManager::~TGeoManager()
 
 Int_t TGeoManager::AddMaterial(const TGeoMaterial *material)
 {
-   return TGeoBuilder::Instance(this)->AddMaterial((TGeoMaterial*)material);
+   return fBuilder->AddMaterial((TGeoMaterial*)material);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -753,7 +756,7 @@ Int_t TGeoManager::AddRegion(TGeoRegion *region)
 
 Int_t TGeoManager::AddTransformation(const TGeoMatrix *matrix)
 {
-   return TGeoBuilder::Instance(this)->AddTransformation((TGeoMatrix*)matrix);
+   return fBuilder->AddTransformation((TGeoMatrix*)matrix);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,7 +764,7 @@ Int_t TGeoManager::AddTransformation(const TGeoMatrix *matrix)
 
 Int_t TGeoManager::AddShape(const TGeoShape *shape)
 {
-   return TGeoBuilder::Instance(this)->AddShape((TGeoShape*)shape);
+   return fBuilder->AddShape((TGeoShape*)shape);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1133,7 +1136,7 @@ void TGeoManager::DoRestoreState()
 
 void TGeoManager::RegisterMatrix(const TGeoMatrix *matrix)
 {
-   return TGeoBuilder::Instance(this)->RegisterMatrix((TGeoMatrix*)matrix);
+   return fBuilder->RegisterMatrix((TGeoMatrix*)matrix);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1265,7 +1268,7 @@ Int_t TGeoManager::TransformVolumeToAssembly(const char *vname)
 TGeoVolume *TGeoManager::Division(const char *name, const char *mother, Int_t iaxis,
                                   Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
-   return TGeoBuilder::Instance(this)->Division(name, mother, iaxis, ndiv, start, step, numed, option);
+   return fBuilder->Division(name, mother, iaxis, ndiv, start, step, numed, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1284,7 +1287,7 @@ void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
                          Double_t theta2, Double_t phi2,
                          Double_t theta3, Double_t phi3)
 {
-   TGeoBuilder::Instance(this)->Matrix(index, theta1, phi1, theta2, phi2, theta3, phi3);
+   fBuilder->Matrix(index, theta1, phi1, theta2, phi2, theta3, phi3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1292,7 +1295,7 @@ void TGeoManager::Matrix(Int_t index, Double_t theta1, Double_t phi1,
 
 TGeoMaterial *TGeoManager::Material(const char *name, Double_t a, Double_t z, Double_t dens, Int_t uid,Double_t radlen, Double_t intlen)
 {
-   return TGeoBuilder::Instance(this)->Material(name, a, z, dens, uid, radlen, intlen);
+   return fBuilder->Material(name, a, z, dens, uid, radlen, intlen);
 
 }
 
@@ -1303,7 +1306,7 @@ TGeoMaterial *TGeoManager::Material(const char *name, Double_t a, Double_t z, Do
 TGeoMaterial *TGeoManager::Mixture(const char *name, Float_t *a, Float_t *z, Double_t dens,
                                    Int_t nelem, Float_t *wmat, Int_t uid)
 {
-   return TGeoBuilder::Instance(this)->Mixture(name, a, z, dens, nelem, wmat, uid);
+   return fBuilder->Mixture(name, a, z, dens, nelem, wmat, uid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1313,7 +1316,7 @@ TGeoMaterial *TGeoManager::Mixture(const char *name, Float_t *a, Float_t *z, Dou
 TGeoMaterial *TGeoManager::Mixture(const char *name, Double_t *a, Double_t *z, Double_t dens,
                                    Int_t nelem, Double_t *wmat, Int_t uid)
 {
-   return TGeoBuilder::Instance(this)->Mixture(name, a, z, dens, nelem, wmat, uid);
+   return fBuilder->Mixture(name, a, z, dens, nelem, wmat, uid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1341,7 +1344,7 @@ TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
                                 Double_t stemax, Double_t deemax, Double_t epsil,
                                 Double_t stmin)
 {
-   return TGeoBuilder::Instance(this)->Medium(name, numed, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil, stmin);
+   return fBuilder->Medium(name, numed, nmat, isvol, ifield, fieldm, tmaxfd, stemax, deemax, epsil, stmin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1363,7 +1366,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Float_t *upar, Int_t npar)
 {
-   TGeoBuilder::Instance(this)->Node(name, nr, mother, x, y, z, irot, isOnly, upar, npar);
+   fBuilder->Node(name, nr, mother, x, y, z, irot, isOnly, upar, npar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1385,7 +1388,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
                        Double_t x, Double_t y, Double_t z, Int_t irot,
                        Bool_t isOnly, Double_t *upar, Int_t npar)
 {
-   TGeoBuilder::Instance(this)->Node(name, nr, mother, x, y, z, irot, isOnly, upar, npar);
+   fBuilder->Node(name, nr, mother, x, y, z, irot, isOnly, upar, npar);
 
 }
 
@@ -1400,7 +1403,7 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
                                 Float_t *upar, Int_t npar)
 {
-   return TGeoBuilder::Instance(this)->Volume(name, shape, nmed, upar, npar);
+   return fBuilder->Volume(name, shape, nmed, upar, npar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1414,7 +1417,7 @@ TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
 TGeoVolume *TGeoManager::Volume(const char *name, const char *shape, Int_t nmed,
                                 Double_t *upar, Int_t npar)
 {
-   return TGeoBuilder::Instance(this)->Volume(name, shape, nmed, upar, npar);
+   return fBuilder->Volume(name, shape, nmed, upar, npar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3034,7 +3037,7 @@ void TGeoManager::ModifiedPad() const
 TGeoVolume *TGeoManager::MakeArb8(const char *name, TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
-   return TGeoBuilder::Instance(this)->MakeArb8(name, medium, dz, vertices);
+   return fBuilder->MakeArb8(name, medium, dz, vertices);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3043,7 +3046,7 @@ TGeoVolume *TGeoManager::MakeArb8(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakeBox(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeBox(name, medium, dx, dy, dz);
+   return fBuilder->MakeBox(name, medium, dx, dy, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3053,7 +3056,7 @@ TGeoVolume *TGeoManager::MakePara(const char *name, TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz,
                                     Double_t alpha, Double_t theta, Double_t phi)
 {
-   return TGeoBuilder::Instance(this)->MakePara(name, medium, dx, dy, dz, alpha, theta, phi);
+   return fBuilder->MakePara(name, medium, dx, dy, dz, alpha, theta, phi);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3063,7 +3066,7 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, TGeoMedium *medium,
                                     Double_t rmin, Double_t rmax, Double_t themin, Double_t themax,
                                     Double_t phimin, Double_t phimax)
 {
-   return TGeoBuilder::Instance(this)->MakeSphere(name, medium, rmin, rmax, themin, themax, phimin, phimax);
+   return fBuilder->MakeSphere(name, medium, rmin, rmax, themin, themax, phimin, phimax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3072,7 +3075,7 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakeTorus(const char *name, TGeoMedium *medium, Double_t r,
                                    Double_t rmin, Double_t rmax, Double_t phi1, Double_t dphi)
 {
-   return TGeoBuilder::Instance(this)->MakeTorus(name, medium, r, rmin, rmax, phi1, dphi);
+   return fBuilder->MakeTorus(name, medium, r, rmin, rmax, phi1, dphi);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3081,7 +3084,7 @@ TGeoVolume *TGeoManager::MakeTorus(const char *name, TGeoMedium *medium, Double_
 TGeoVolume *TGeoManager::MakeTube(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeTube(name, medium, rmin, rmax, dz);
+   return fBuilder->MakeTube(name, medium, rmin, rmax, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3092,7 +3095,7 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz,
                                      Double_t phiStart, Double_t phiEnd)
 {
-   return TGeoBuilder::Instance(this)->MakeTubs(name, medium, rmin, rmax, dz, phiStart, phiEnd);
+   return fBuilder->MakeTubs(name, medium, rmin, rmax, dz, phiStart, phiEnd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3101,7 +3104,7 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakeEltu(const char *name, TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeEltu(name, medium, a, b, dz);
+   return fBuilder->MakeEltu(name, medium, a, b, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3110,7 +3113,7 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakeHype(const char *name, TGeoMedium *medium,
                                         Double_t rin, Double_t stin, Double_t rout, Double_t stout, Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeHype(name, medium, rin, stin, rout, stout, dz);
+   return fBuilder->MakeHype(name, medium, rin, stin, rout, stout, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3119,7 +3122,7 @@ TGeoVolume *TGeoManager::MakeHype(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakeParaboloid(const char *name, TGeoMedium *medium,
                                         Double_t rlo, Double_t rhi, Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeParaboloid(name, medium, rlo, rhi, dz);
+   return fBuilder->MakeParaboloid(name, medium, rlo, rhi, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3129,7 +3132,7 @@ TGeoVolume *TGeoManager::MakeCtub(const char *name, TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
-   return TGeoBuilder::Instance(this)->MakeCtub(name, medium, rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
+   return fBuilder->MakeCtub(name, medium, rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3139,7 +3142,7 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, TGeoMedium *medium,
                                      Double_t dz, Double_t rmin1, Double_t rmax1,
                                      Double_t rmin2, Double_t rmax2)
 {
-   return TGeoBuilder::Instance(this)->MakeCone(name, medium, dz, rmin1, rmax1, rmin2, rmax2);
+   return fBuilder->MakeCone(name, medium, dz, rmin1, rmax1, rmin2, rmax2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3150,7 +3153,7 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, TGeoMedium *medium,
                                      Double_t rmin2, Double_t rmax2,
                                      Double_t phi1, Double_t phi2)
 {
-   return TGeoBuilder::Instance(this)->MakeCons(name, medium, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
+   return fBuilder->MakeCons(name, medium, dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3159,7 +3162,7 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakePcon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
-   return TGeoBuilder::Instance(this)->MakePcon(name, medium, phi, dphi, nz);
+   return fBuilder->MakePcon(name, medium, phi, dphi, nz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3168,7 +3171,7 @@ TGeoVolume *TGeoManager::MakePcon(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakePgon(const char *name, TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
-   return TGeoBuilder::Instance(this)->MakePgon(name, medium, phi, dphi, nedges, nz);
+   return fBuilder->MakePgon(name, medium, phi, dphi, nedges, nz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3177,7 +3180,7 @@ TGeoVolume *TGeoManager::MakePgon(const char *name, TGeoMedium *medium,
 TGeoVolume *TGeoManager::MakeTrd1(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeTrd1(name, medium, dx1, dx2, dy, dz);
+   return fBuilder->MakeTrd1(name, medium, dx1, dx2, dy, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3187,7 +3190,7 @@ TGeoVolume *TGeoManager::MakeTrd2(const char *name, TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy1, Double_t dy2,
                                   Double_t dz)
 {
-   return TGeoBuilder::Instance(this)->MakeTrd2(name, medium, dx1, dx2, dy1, dy2, dz);
+   return fBuilder->MakeTrd2(name, medium, dx1, dx2, dy1, dy2, dz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3198,7 +3201,7 @@ TGeoVolume *TGeoManager::MakeTrap(const char *name, TGeoMedium *medium,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-   return TGeoBuilder::Instance(this)->MakeTrap(name, medium, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
+   return fBuilder->MakeTrap(name, medium, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3209,7 +3212,7 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, TGeoMedium *medium,
                                   Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2,
                                   Double_t tl2, Double_t alpha2)
 {
-   return TGeoBuilder::Instance(this)->MakeGtra(name, medium, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
+   return fBuilder->MakeGtra(name, medium, dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3217,7 +3220,7 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, TGeoMedium *medium,
 
 TGeoVolume *TGeoManager::MakeXtru(const char *name, TGeoMedium *medium, Int_t nz)
 {
-   return TGeoBuilder::Instance(this)->MakeXtru(name, medium, nz);
+   return fBuilder->MakeXtru(name, medium, nz);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3424,7 +3427,7 @@ void TGeoManager::ClearPhysicalNodes(Bool_t mustdelete)
 
 TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
 {
-   return TGeoBuilder::Instance(this)->MakeVolumeAssembly(name);
+   return fBuilder->MakeVolumeAssembly(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3432,7 +3435,7 @@ TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)
 
 TGeoVolumeMulti *TGeoManager::MakeVolumeMulti(const char *name, TGeoMedium *medium)
 {
-   return TGeoBuilder::Instance(this)->MakeVolumeMulti(name, medium);
+   return fBuilder->MakeVolumeMulti(name, medium);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3837,7 +3840,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
       if (fgVerboseLevel>0) Info("Export","Exporting %s %s as gdml code", GetName(), GetTitle());
       //C++ version
       TString cmd ;
-      cmd = TString::Format("TGDMLWrite::StartGDMLWriting(gGeoManager,\"%s\",\"%s\")", filename, option);
+      cmd = TString::Format("TGDMLWrite::StartGDMLWriting((TGeoManager*)%p,\"%s\",\"%s\")", this, filename, option);
       gROOT->ProcessLineFast(cmd);
       return 1;
    }
@@ -3953,17 +3956,17 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
 
    if (strstr(filename,".gdml")) {
       // import from a gdml file
-      new TGeoManager("GDMLImport", "Geometry imported from GDML");
-      TString cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
+      TGeoManager *geom = new TGeoManager("GDMLImport", "Geometry imported from GDML");
+      TString cmd = TString::Format("TGDMLParse::StartGDML(\"%s\", (TGeoManager*)%p)", filename, geom);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
       if(world == 0) {
          ::Error("TGeoManager::Import", "Cannot open file");
       }
       else {
-         gGeoManager->SetTopVolume(world);
-         gGeoManager->CloseGeometry();
-         gGeoManager->DefaultColors();
+         geom->SetTopVolume(world);
+         geom->CloseGeometry();
+         geom->DefaultColors();
       }
    } else {
       // import from a root file
