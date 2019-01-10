@@ -158,7 +158,7 @@ protected:
 public:
    // constructors
    TGeoNodeMatrix();
-   TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix);
+   TGeoNodeMatrix(const TGeoVolume *vol, const TGeoMatrix *matrix = nullptr);
    // destructor
    virtual ~TGeoNodeMatrix();
 

@@ -175,10 +175,10 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    fPoints   = 0;
    fThreadSize = 0;
    CreateThreadData(1);
-   if (!fLeftMat) fLeftMat = gGeoIdentity;
+   if (!fLeftMat) fLeftMat = new TGeoIdentity();
    else fLeftMat->RegisterYourself();
    fRightMat = rmat;
-   if (!fRightMat) fRightMat = gGeoIdentity;
+   if (!fRightMat) fRightMat = new TGeoIdentity();
    else fRightMat->RegisterYourself();
    if (!fLeft) {
       Error("ctor", "left shape is NULL");
@@ -217,7 +217,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
    TString newshape;
 
    if (stransf.Length() == 0) {
-      mat = gGeoIdentity;
+      mat = new TGeoIdentity();
    } else {
       mat = (TGeoMatrix*)gGeoManager->GetListOfMatrices()->FindObject(stransf.Data());
    }
@@ -326,15 +326,10 @@ void TGeoBoolNode::RegisterMatrices()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace one of the matrices. Does not work with TGeoIdentity. Returns true
-/// if replacement was successful.
+/// Replace one of the matrices. Returns true if replacement was successful.
 
 Bool_t TGeoBoolNode::ReplaceMatrix(TGeoMatrix *mat, TGeoMatrix *newmat)
 {
-   if (mat==gGeoIdentity || newmat==gGeoIdentity) {
-      Error("ReplaceMatrix", "Matrices should not be gGeoIdentity. Use default matrix constructor to represent identities.");
-      return kFALSE;
-   }
    if (!mat || !newmat) {
       Error("ReplaceMatrix", "Matrices should not be null pointers.");
       return kFALSE;

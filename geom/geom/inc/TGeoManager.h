@@ -50,6 +50,7 @@ protected:
    static Int_t          fgMaxDaughters;    //! Maximum number of daughters
    static Int_t          fgMaxXtruVert;     //! Maximum number of Xtru vertices
    static UInt_t         fgExportPrecision; //! Precision to be used in ASCII exports
+   static Bool_t         fgNoGlobal;        //! Special mode where no global is used
 
    TGeoManager(const TGeoManager&);
    TGeoManager& operator=(const TGeoManager&);
@@ -464,6 +465,8 @@ public:
    static Bool_t          IsLocked();
    static void            SetExportPrecision(UInt_t prec) {fgExportPrecision = prec;}
    static UInt_t          GetExportPrecision() {return fgExportPrecision;}
+   static void            SetNoGlobal(Bool_t flag = true) {fgNoGlobal = flag;}
+   static Bool_t          IsNoGlobal() {return fgNoGlobal;}
    Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
    Bool_t                 IsCleaning() const {return fIsGeomCleaning;}
 
